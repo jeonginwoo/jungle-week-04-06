@@ -104,6 +104,20 @@ int popBack(sll *sll)
     return pop_key;
 }
 
+node *search(sll *sll, int key)
+{
+    node *find_node = sll->head;
+    while (find_node != NULL) {
+        if (find_node->key == key){
+            printf("search %d : find!\n", key);
+            return find_node;
+        }
+        find_node = find_node->next;
+    }
+    printf("search %d : not exist\n", key);
+    return find_node;
+}
+
 void print(sll *sll)
 {
     if (sll->head == NULL)
@@ -160,6 +174,8 @@ int main()
     pushBack(sll, 21);
     pushBack(sll, 1);
     pushBack(sll, 9);
+    search(sll, 1);
+    search(sll, 2);
     popBack(sll);
     popBack(sll);
     popBack(sll);
