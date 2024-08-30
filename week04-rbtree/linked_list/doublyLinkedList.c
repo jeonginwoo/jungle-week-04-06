@@ -40,10 +40,22 @@ void pushFront(dll *dll, int key)
     print(dll);
 }
 
-// void pushBack(dll *dll, int key)
-// {
-
-// }
+void pushBack(dll *dll, int key)
+{
+    node *push_node = (node *)calloc(1, sizeof(node));
+    push_node->key = key;
+    if (dll->size == 0){
+        dll->head->next = dll->head->prev = push_node;
+    } else {
+        push_node->prev = dll->head->prev;
+        dll->head->prev->next = push_node;
+        dll->head->prev = push_node;
+        push_node->next = dll->head;
+    }
+    dll->size++;
+    printf("push back %d : ", key);
+    print(dll);
+}
 
 // int popFront(dll *dll)
 // {
@@ -90,5 +102,10 @@ int main()
     pushFront(dll, 4);
     pushFront(dll, 7);
     pushFront(dll, 15);
+    pushBack(dll, 28);
+    pushBack(dll, 21);
+    pushBack(dll, 43);
+    pushBack(dll, 35);
+    pushBack(dll, 6);
     return 0;
 }
