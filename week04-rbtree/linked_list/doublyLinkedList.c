@@ -19,6 +19,7 @@ dll *newDll()
     dll *new_dll = (dll *)calloc(1, sizeof(dll));
     node *head_node = (node *)calloc(1, sizeof(node));
     new_dll->head = head_node;
+    head_node->next = head_node->prev = head_node;
     new_dll->size = 0;
     return new_dll;
 }
@@ -99,9 +100,19 @@ int popBack(dll *dll)
     return pop_key;
 }
 
-// node *search(dll *dll, int key)
-// {
-// }
+node *search(dll *dll, int key)
+{
+    node *find_node = dll->head;
+    while (find_node->next != dll->head) {
+        find_node = find_node->next;
+        if (find_node->key == key) {
+            printf("search %d : find!\n", key);
+            return find_node;
+        }
+    }
+    printf("search %d : not exist\n", key);
+    return NULL;
+}
 
 // void removeIdx(dll *dll, int idx)
 // {
@@ -147,5 +158,7 @@ int main()
     popBack(dll);
     popBack(dll);
     popBack(dll);
+    search(dll, 17);
+    search(dll, 18);
     return 0;
 }
