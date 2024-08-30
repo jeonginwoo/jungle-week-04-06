@@ -9,7 +9,7 @@ typedef struct Node
 
 typedef struct SinglyLinkedList
 {
-    node *head; // head는 node의 포인터
+    node *head;
     int size;
 } sll;
 
@@ -128,8 +128,8 @@ node *search(sll *sll, int key)
 
 void removeIdx(sll *sll, int idx)
 {
-    if (sll->head == NULL || idx >= sll->size) {
-        print("can't remove\n");
+    if (sll->size <= idx) {
+        printf("can't remove\n");
         return;
     }
     node *now_node = sll->head;
@@ -182,7 +182,7 @@ void deleteList(sll *sll)
         free(current);
         current = next_node;
     }
-    free(sll); // 리스트 구조체 자체도 해제
+    free(sll);
 }
 
 int main()
