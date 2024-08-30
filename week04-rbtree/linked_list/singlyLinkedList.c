@@ -36,15 +36,18 @@ void pushBack(sll *sll, int key)
     node *push_node = (node *)calloc(1, sizeof(node));
     push_node->key = key;
 
-    if (sll->head == NULL) {
+    if (sll->head == NULL)
+    {
         sll->head = push_node;
-    } else {
+    }
+    else
+    {
         node *tail_node = sll->head;
         while (tail_node->next != NULL)
             tail_node = tail_node->next;
         tail_node->next = push_node;
     }
-    
+
     sll->size++;
     printf("push back %d : ", key);
     print(sll);
@@ -90,9 +93,12 @@ int popBack(sll *sll)
     }
     pop_key = tail_node->key;
 
-    if (prev_node == NULL) {
+    if (prev_node == NULL)
+    {
         sll->head = NULL;
-    } else {
+    }
+    else
+    {
         prev_node->next = NULL;
     }
 
@@ -107,8 +113,10 @@ int popBack(sll *sll)
 node *search(sll *sll, int key)
 {
     node *find_node = sll->head;
-    while (find_node != NULL) {
-        if (find_node->key == key){
+    while (find_node != NULL)
+    {
+        if (find_node->key == key)
+        {
             printf("search %d : find!\n", key);
             return find_node;
         }
@@ -116,6 +124,31 @@ node *search(sll *sll, int key)
     }
     printf("search %d : not exist\n", key);
     return find_node;
+}
+
+void removeIdx(sll *sll, int idx)
+{
+    if (sll->head == NULL || idx >= sll->size) {
+        print("can't remove\n");
+        return;
+    }
+    node *now_node = sll->head;
+    node *prev_node = NULL;
+    int now_idx = 0;
+    while (now_idx < idx) {
+        prev_node = now_node;
+        now_node = now_node->next;
+        now_idx++;
+    }
+
+    if (prev_node == NULL) {
+        sll->head = NULL;
+    } else {
+        prev_node->next = now_node->next;
+    }
+    free(now_node);
+    printf("remove idx %d node : ", idx);
+    print(sll);
 }
 
 void print(sll *sll)
@@ -143,12 +176,13 @@ void deleteList(sll *sll)
 {
     node *current = sll->head;
     node *next_node;
-    while (current != NULL) {
+    while (current != NULL)
+    {
         next_node = current->next;
         free(current);
         current = next_node;
     }
-    free(sll);  // 리스트 구조체 자체도 해제
+    free(sll); // 리스트 구조체 자체도 해제
 }
 
 int main()
@@ -158,6 +192,8 @@ int main()
     pushFront(sll, 17);
     pushFront(sll, 4);
     pushFront(sll, 7);
+    removeIdx(sll, 3);
+    removeIdx(sll, 1);
     pushFront(sll, 15);
     pushBack(sll, 21);
     pushBack(sll, 1);
