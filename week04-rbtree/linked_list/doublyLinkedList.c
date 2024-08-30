@@ -57,13 +57,47 @@ void pushBack(dll *dll, int key)
     print(dll);
 }
 
-// int popFront(dll *dll)
-// {
-// }
+int popFront(dll *dll)
+{
+    if (dll->size == 0){
+        printf("List is empty, cannot pop.\n");
+        return -1;
+    }
+    int pop_key;
+    node *pop_node = dll->head->next;
+    pop_key = pop_node->key;
 
-// int popBack(dll *dll)
-// {
-// }
+    dll->head->next = pop_node->next;
+    pop_node->next->prev = dll->head;
+    free(pop_node);
+
+    dll->size--;
+
+    printf("pop front : ");
+    print(dll);
+    return pop_key;
+}
+
+int popBack(dll *dll)
+{
+    if (dll->size == 0){
+        printf("List is empty, cannot pop.\n");
+        return -1;
+    }
+    int pop_key;
+    node *pop_node = dll->head->prev;
+    pop_key = pop_node->key;
+
+    dll->head->prev = pop_node->prev;
+    pop_node->prev->next = dll->head;
+    free(pop_node);
+
+    dll->size--;
+
+    printf("pop back : ");
+    print(dll);
+    return pop_key;
+}
 
 // node *search(dll *dll, int key)
 // {
@@ -107,5 +141,11 @@ int main()
     pushBack(dll, 43);
     pushBack(dll, 35);
     pushBack(dll, 6);
+    popFront(dll);
+    popFront(dll);
+    popFront(dll);
+    popBack(dll);
+    popBack(dll);
+    popBack(dll);
     return 0;
 }
