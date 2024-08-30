@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct node
+typedef struct Node
 {
     int key;
-    struct node *next;
+    struct Node *next;
 } node;
 
 typedef struct SinglyLinkedList
