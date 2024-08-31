@@ -22,31 +22,30 @@ node_t *bst_insert(bst *bst, key_t key) {
     insert_node->key = key;
     if (bst->root == NULL){
         bst->root = insert_node;
-        return bst->root;
-    }
-    
-    node_t *now_node = bst->root;
-    node_t *prev_node = NULL;
-    while (now_node != NULL) {
-        prev_node = now_node;
-        if (key <= now_node->key) {
-            now_node = now_node->left;
-        } else {
-            now_node = now_node->right;
-        }
-    }
-    if (key <= prev_node->key) {
-        prev_node->left = insert_node;
     } else {
-        prev_node->right = insert_node;
+        node_t *now_node = bst->root;
+        node_t *prev_node = NULL;
+        while (now_node != NULL) {
+            prev_node = now_node;
+            if (key <= now_node->key) {
+                now_node = now_node->left;
+            } else {
+                now_node = now_node->right;
+            }
+        }
+        if (key <= prev_node->key) {
+            prev_node->left = insert_node;
+        } else {
+            prev_node->right = insert_node;
+        }
+        insert_node->parent = prev_node;
     }
-    insert_node->parent = prev_node;
 
     printf("insert %d : ", key);
     preorder(bst->root);
     printf("\n");
 
-    return bst->root;
+    return insert_node;
 }
 
 node_t *bst_find(bst *bst, key_t key) {
@@ -64,9 +63,37 @@ node_t *bst_find(bst *bst, key_t key) {
     } else {
         printf("find %d : not exist\n", key);
     }
-    
+
     return find_node;
 }
+
+// int bst_delete(bst *bst, key_t key) {
+//     node_t *find_node = bst_find(bst, key);
+//     if (find_node == NULL) {
+//         return -1;
+//     }
+
+//     node_t *left = find_node->left;
+//     if (find_node == bst->root) {
+//         bst->root = left;
+//         left->parent = NULL;
+//     } else {
+//         find_node->parent->left = left;
+//         left->parent = find_node->parent;
+//     }
+
+//     node_t *right = find_node->right;
+//     node_t *left_right = left;
+//     while (left_right->right != NULL) {
+//         left_right = left_right->right;
+//     }
+//     left_right->right = right;
+//     right->parent = left_right;
+    
+//     int delete_key = find_node->key;
+//     free(find_node);
+//     return delete_key;
+// }
 
 void preorder(node_t *node) {
     if (node == NULL)
