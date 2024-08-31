@@ -42,7 +42,30 @@ node_t *bst_insert(bst *bst, key_t key) {
     }
     insert_node->parent = prev_node;
 
+    printf("insert %d : ", key);
+    preorder(bst->root);
+    printf("\n");
+
     return bst->root;
+}
+
+node_t *bst_find(bst *bst, key_t key) {
+    node_t *find_node = bst->root;
+    while (find_node != NULL && find_node->key != key) {
+        if (key <= find_node->key) {
+            find_node = find_node->left;
+        } else {
+            find_node = find_node->right;
+        }
+    }
+
+    if (find_node != NULL) {
+        printf("find %d : find it!\n", key);
+    } else {
+        printf("find %d : not exist\n", key);
+    }
+    
+    return find_node;
 }
 
 void preorder(node_t *node) {
@@ -59,6 +82,12 @@ void postorder(node_t *node) {
     postorder(node->left);
     postorder(node->right);
     printf("%d ", node->key);
+    free(node);
+}
+
+void delete_tree(bst *bst) {
+    postorder(bst->root);
+    free(bst);
 }
 
 int main() {
@@ -74,8 +103,10 @@ int main() {
     bst_insert(bst, 3);
     bst_insert(bst, 31);
     bst_insert(bst, 17);
-    preorder(bst->root);
-    printf("\n");
-
+    bst_find(bst, 9);
+    bst_find(bst, 8);
+    bst_find(bst, 12);
+    bst_find(bst, 13);
+    delete_tree(bst);
     return 0;
 }
