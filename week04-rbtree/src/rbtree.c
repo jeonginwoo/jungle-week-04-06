@@ -4,7 +4,7 @@
 
 
 node_t *bst_insert(rbtree *t, const key_t key);     // 이진탐색트리 삽입
-void rbtree_check(rbtree *t, node_t *check);   // rbtree 규칙 확인
+void rbtree_insert_check(rbtree *t, node_t *check);   // rbtree 규칙 확인
 void rotateRight(rbtree *t, node_t *z);     // 트리 오른쪽으로 회전
 void rotateLeft(rbtree *t, node_t *z);      // 트리 왼쪽으로 회전
 void inorder_print(rbtree *t, node_t *node);        // inorder 형태로 트리 출력
@@ -14,12 +14,12 @@ void postorder_free(rbtree *t, node_t *node);   // postorder 형태로 트리의
 
 rbtree *new_rbtree(void)
 {
-    rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
+    rbtree *t = (rbtree *)calloc(1, sizeof(rbtree));
     // TODO: initialize struct if needed
-    p->nil = (node_t *)calloc(1, sizeof(node_t));
-    p->nil->color = RBTREE_BLACK;
-    p->root = p->nil;
-    return p;
+    t->nil = (node_t *)calloc(1, sizeof(node_t));
+    t->nil->color = RBTREE_BLACK;
+    t->root = t->nil;
+    return t;
 }
 
 void delete_rbtree(rbtree *t)
@@ -33,7 +33,7 @@ node_t *rbtree_insert(rbtree *t, const key_t key)
 {
     // TODO: implement insert
     node_t *insert = bst_insert(t, key);
-    rbtree_check(t, insert);
+    rbtree_insert_check(t, insert);
 
     printf("insert %d\t: ", key);
     inorder_print(t, t->root);
@@ -46,7 +46,7 @@ node_t *rbtree_find(const rbtree *t, const key_t key)
 {
     // TODO: implement find
     node_t *find_node = t->root;
-    while (find_node != t->nil && find_node->key != key) {
+    while (find_node != NULL && find_node->key != key) {
         if (key <= find_node->key) {
             find_node = find_node->left;
         } else {
@@ -125,6 +125,7 @@ node_t *bst_insert(rbtree *t, const key_t key) {
 
     if (t->root == t->nil){
         insert_node->color = RBTREE_BLACK;
+        insert_node->parent = t->nil;
         t->root = insert_node;
     } else {
         node_t *now_node = t->root;
@@ -148,7 +149,7 @@ node_t *bst_insert(rbtree *t, const key_t key) {
     return insert_node;
 }
 
-void rbtree_check(rbtree *t, node_t *check) {
+void rbtree_insert_check(rbtree *t, node_t *check) {
     if (check == t->root) {
         check->color = RBTREE_BLACK;
         return;
@@ -164,30 +165,30 @@ void rbtree_check(rbtree *t, node_t *check) {
     if (uncle->color == RBTREE_RED) {
         parent->color = uncle->color = RBTREE_BLACK;
         grand->color = RBTREE_RED;
-        rbtree_check(t, grand);
+        rbtree_insert_check(t, grand);
     } else {
         grand->color = RBTREE_RED;
         if (grand->left == parent) {
             if (parent->left == check) {
                 parent->color = RBTREE_BLACK;
                 rotateRight(t, grand);
-                rbtree_check(t, parent);
+                rbtree_insert_check(t, parent);
             } else {
                 check->color = RBTREE_RED;
                 rotateLeft(t, parent);
                 rotateRight(t, grand);
-                rbtree_check(t, check);
+                rbtree_insert_check(t, check);
             }
         } else {
             if (parent->right == check) {
                 parent->color = RBTREE_BLACK;
                 rotateLeft(t, grand);
-                rbtree_check(t, parent);
+                rbtree_insert_check(t, parent);
             } else {
                 check->color = RBTREE_RED;
                 rotateRight(t, parent);
                 rotateLeft(t, grand);
-                rbtree_check(t, check);
+                rbtree_insert_check(t, check);
             }
         }
     }
