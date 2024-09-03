@@ -4,11 +4,13 @@
 
 
 node_t *bst_insert(rbtree *t, const key_t key);     // 이진탐색트리 삽입
-void rbtree_insert_check(rbtree *t, node_t *check);   // rbtree 규칙 확인
+void rbtree_insert_check(rbtree *t, node_t *check);   // 삽입 규칙 확인
+node_t *bst_delete(rbtree *t, node_t *delete_node, color_t *delete_color);    // 이진탐색트리 삭제
+void rbtree_delete_check(rbtree *t, node_t *node);   // 삭제 규칙 확인
 void rotateRight(rbtree *t, node_t *z);     // 트리 오른쪽으로 회전
 void rotateLeft(rbtree *t, node_t *z);      // 트리 왼쪽으로 회전
 void inorder_print(rbtree *t, node_t *node);        // inorder 형태로 트리 출력
-void inorder_arr(node_t *nil, node_t *node, int* arr, int* idx);    // inorder 형태로 배열에 저장
+void inorder_arr(node_t *nil, node_t *node, int* arr, int* idx, const size_t n);    // inorder 형태로 배열에 저장
 void postorder_free(rbtree *t, node_t *node);   // postorder 형태로 트리의 모든 노드 메모리 해제
 
 
@@ -26,6 +28,7 @@ void delete_rbtree(rbtree *t)
 {
     // TODO: reclaim the tree nodes's memory
     postorder_free(t, t->root);
+    free(t->nil);
     free(t);
 }
 
@@ -46,7 +49,7 @@ node_t *rbtree_find(const rbtree *t, const key_t key)
 {
     // TODO: implement find
     node_t *find_node = t->root;
-    while (find_node != NULL && find_node->key != key) {
+    while (find_node != t->nil && find_node->key != key) {
         if (key <= find_node->key) {
             find_node = find_node->left;
         } else {
@@ -60,7 +63,7 @@ node_t *rbtree_find(const rbtree *t, const key_t key)
         printf("find %d\t: not exist\n", key);
     }
 
-    return find_node;
+    return (find_node != t->nil) ? find_node : NULL;
 }
 
 node_t *rbtree_min(const rbtree *t)
@@ -104,6 +107,17 @@ node_t *rbtree_max(const rbtree *t)
 int rbtree_erase(rbtree *t, node_t *p)
 {
     // TODO: implement erase
+    key_t key = p->key;
+    color_t delete_color;
+    node_t *replace_node = bst_delete(t, p, &delete_color);
+    if (delete_color == RBTREE_BLACK) {
+        rbtree_delete_check(t, replace_node);
+    }
+
+    printf("delete %d\t: ", key);
+    inorder_print(t, t->root);
+    printf("\n");
+    
     return 0;
 }
 
@@ -111,7 +125,7 @@ int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n)
 {
     // TODO: implement to_array.
     int idx = 0;
-    inorder_arr(t->nil, t->root, arr, &idx);
+    inorder_arr(t->nil, t->root, arr, &idx, n);
     return 0;
 }
 
@@ -194,6 +208,91 @@ void rbtree_insert_check(rbtree *t, node_t *check) {
     }
 }
 
+node_t *bst_delete(rbtree *t, node_t *delete_node, color_t *delete_color) {
+    node_t *replace_node;
+    node_t *left = delete_node->left;
+    node_t *right = delete_node->right;
+    node_t *parent = delete_node->parent;
+
+    *delete_color = delete_node->color;
+
+    if (left == t->nil && right == t->nil) {        // case1 : 자식 0
+        replace_node = t->nil;
+        if (delete_node == t->root) {
+            t->root = t->nil;
+        } else {
+            if (parent->left == delete_node) {
+                parent->left = t->nil;
+            } else {
+                parent->right = t->nil;
+            }
+        }
+    } else if (left == t->nil) {                    // case2-1 : 자식 1 (right)
+        replace_node = right;
+        if (delete_node == t->root) {
+            t->root = right;
+            right->parent = t->nil;
+        } else {
+            if (parent->left == delete_node) {
+                parent->left = right;
+            } else {
+                parent->right = right;
+            }
+            right->parent = parent;
+        }
+    } else if (right == t->nil) {                   // case2-2 : 자식 1 (left)
+        replace_node = left;
+        if (delete_node == t->root) {
+            t->root = left;
+            left->parent = t->nil;
+        } else {
+            if (parent->right == delete_node) {
+                parent->right = left;
+            } else {
+                parent->left = left;
+            }
+            left->parent = parent;
+        }
+    } else {                                        // case3 : 자식 2 (successor의 color가 삭제됨)
+        node_t *successor = right;
+        while (successor->left != t->nil) {         // 삭제한 노드와 바꿀 노드 찾기
+            successor = successor->left;
+        }
+        *delete_color = successor->color;
+        replace_node = successor->right;
+
+        node_t *s_parent = successor->parent;
+        if (successor != right) {                   // successor가 delete_node의 오른쪽 자식이 아닌 경우 추가로 처리
+            s_parent->left = successor->right;
+            if (successor->right != t->nil) {
+                successor->right->parent = s_parent;
+            }
+            successor->right = right;
+            right->parent = successor;
+        }
+
+        if (delete_node == t->root) {               // successor의 부모 재정의
+            t->root = successor;
+        } else if (parent->left == delete_node) {
+            parent->left = successor;
+        } else {
+            parent->right = successor;
+        }
+
+        successor->parent = parent;
+        successor->left = left;
+        left->parent = successor;
+        successor->color = delete_node->color;
+    }
+
+    free(delete_node);
+    return replace_node;
+}
+
+void rbtree_delete_check(rbtree *t, node_t *node) {
+
+}
+
 void rotateRight(rbtree *t, node_t *z) {
     if (z == NULL) return;
     node_t *x = z->left;
@@ -242,7 +341,7 @@ void inorder_print(rbtree *t, node_t *node) {
     inorder_print(t, node->right);
 }
 
-void inorder_arr(node_t *nil, node_t *node, int* arr, int* idx) {
+void inorder_arr(node_t *nil, node_t *node, int* arr, int* idx, const size_t n) {
     if (node == nil)
         return;
     inorder_arr(nil, node->left, arr, idx);

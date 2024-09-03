@@ -32,6 +32,27 @@ int main(int argc, char *argv[]) {
     rbtree_min(rb);
     rbtree_max(rb);
 
+    rbtree_erase(rb, rbtree_find(rb, 45));
+    rbtree_erase(rb, rbtree_find(rb, 12));
+    rbtree_erase(rb, rbtree_find(rb, 89));
+    rbtree_erase(rb, rbtree_find(rb, 18));
+    rbtree_erase(rb, rbtree_find(rb, 71));
+    rbtree_erase(rb, rbtree_find(rb, 67));
+    rbtree_erase(rb, rbtree_find(rb, 92));
+    rbtree_erase(rb, rbtree_find(rb, 8));
+    rbtree_erase(rb, rbtree_find(rb, 33));
+    rbtree_erase(rb, rbtree_find(rb, 76));
+    rbtree_erase(rb, rbtree_find(rb, 81));
+    rbtree_erase(rb, rbtree_find(rb, 50));
+    rbtree_erase(rb, rbtree_find(rb, 54));
+    rbtree_erase(rb, rbtree_find(rb, 38));
+    rbtree_erase(rb, rbtree_find(rb, 5));
+    rbtree_erase(rb, rbtree_find(rb, 23));
+    rbtree_erase(rb, rbtree_find(rb, 64));
+    rbtree_erase(rb, rbtree_find(rb, 96));
+    rbtree_erase(rb, rbtree_find(rb, 29));
+    rbtree_erase(rb, rbtree_find(rb, 59));
+
     key_t *arr = calloc(20, sizeof(key_t));
     rbtree_to_array(rb, arr, (size_t)15);
     for (int i=0; i<20; i++) {
