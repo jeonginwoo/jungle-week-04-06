@@ -3,20 +3,27 @@
 #include <stdio.h>
 
 
-node_t *bst_insert(rbtree *t, const key_t key);     // 이진탐색트리 삽입
-void rbtree_insert_check(rbtree *t, node_t *check); // 삽입 규칙 확인
-node_t *bst_delete(rbtree *t, node_t *delete_node, color_t *delete_color);  // 이진탐색트리 삭제
-void rbtree_delete_check(rbtree *t, node_t *node);  // 삭제 규칙 확인
-void rotateRight(rbtree *t, node_t *z);         // 트리 오른쪽으로 회전
-void rotateLeft(rbtree *t, node_t *z);          // 트리 왼쪽으로 회전
-void inorder_arr(node_t *nil, node_t *node, int* arr, int* idx, const size_t n);    // inorder 형태로 배열에 저장
-void postorder_free(rbtree *t, node_t *node);       // postorder 형태로 트리의 모든 노드 메모리 해제
+// 이진탐색트리 삽입
+node_t *bst_insert(rbtree *t, const key_t key);
+// 삽입 규칙 확인
+void rbtree_insert_check(rbtree *t, node_t *check);
+// 이진탐색트리 삭제
+node_t *bst_delete(rbtree *t, node_t *delete_node, color_t *delete_color);
+// 삭제 규칙 확인
+void rbtree_delete_check(rbtree *t, node_t *node);
+// 트리 오른쪽으로 회전
+void rotateRight(rbtree *t, node_t *z);
+// 트리 왼쪽으로 회전
+void rotateLeft(rbtree *t, node_t *z);
+// inorder 형태로 배열에 저장
+void inorder_arr(node_t *nil, node_t *node, int* arr, int* idx, const size_t n);
+// postorder 형태로 트리의 모든 노드 메모리 해제
+void postorder_free(rbtree *t, node_t *node);
 
 
 rbtree *new_rbtree(void)
 {
     rbtree *t = (rbtree *)calloc(1, sizeof(rbtree));
-    // TODO: initialize struct if needed
     t->nil = (node_t *)calloc(1, sizeof(node_t));
     t->nil->color = RBTREE_BLACK;
     t->root = t->nil;
@@ -25,7 +32,6 @@ rbtree *new_rbtree(void)
 
 void delete_rbtree(rbtree *t)
 {
-    // TODO: reclaim the tree nodes's memory
     postorder_free(t, t->root);
     free(t->nil);
     free(t);
@@ -33,24 +39,20 @@ void delete_rbtree(rbtree *t)
 
 node_t *rbtree_insert(rbtree *t, const key_t key)
 {
-    // TODO: implement insert
     node_t *insert = bst_insert(t, key);
     rbtree_insert_check(t, insert);
 
-    printf("insert %d\t: ", key);
-    preorder_print(t, t->root);
-    printf("\n");
+    // printf("insert %d\t: ", key);
+    // preorder_print(t, t->root);
+    // printf("\n");
 
     return insert;
 }
 
 node_t *rbtree_find(const rbtree *t, const key_t key)
 {
-    // TODO: implement find
     node_t *find_node = t->root;
-    while (find_node != t->nil && find_node->key != key) {
-        
-        
+    while (find_node != t->nil && find_node->key != key) {        
         if (key <= find_node->key) {
             find_node = find_node->left;
         } else {
@@ -63,7 +65,6 @@ node_t *rbtree_find(const rbtree *t, const key_t key)
 
 node_t *rbtree_min(const rbtree *t)
 {
-    // TODO: implement find
     node_t *search = t->root;
     if (search == NULL) {
         return NULL;
@@ -80,7 +81,6 @@ node_t *rbtree_min(const rbtree *t)
 
 node_t *rbtree_max(const rbtree *t)
 {
-    // TODO: implement find
     node_t *search = t->root;
     if (search == NULL) {
         return NULL;
@@ -97,7 +97,6 @@ node_t *rbtree_max(const rbtree *t)
 
 int rbtree_erase(rbtree *t, node_t *p)
 {
-    // TODO: implement erase
     key_t key = p->key;
     color_t delete_color;
     node_t *replace_node = bst_delete(t, p, &delete_color);
@@ -105,16 +104,15 @@ int rbtree_erase(rbtree *t, node_t *p)
         rbtree_delete_check(t, replace_node);
     }
 
-    printf("delete %d\t: ", key);
-    preorder_print(t, t->root);
-    printf("\n");
+    // printf("delete %d\t: ", key);
+    // preorder_print(t, t->root);
+    // printf("\n");
     
     return 0;
 }
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n)
 {
-    // TODO: implement to_array.
     int idx = 0;
     inorder_arr(t->nil, t->root, arr, &idx, n);
     return 0;
@@ -167,25 +165,31 @@ void rbtree_insert_check(rbtree *t, node_t *check) {
     node_t *grand = parent->parent;
     node_t *uncle = (grand->left == parent)? grand->right : grand->left;
     
+    // 삼촌이 red
     if (uncle->color == RBTREE_RED) {
         parent->color = uncle->color = RBTREE_BLACK;
         grand->color = RBTREE_RED;
         rbtree_insert_check(t, grand);
+    // 삼촌이 black
     } else {
         grand->color = RBTREE_RED;
         if (grand->left == parent) {
+            // 부모가 left, 체크 노드가 left
             if (parent->left == check) {
                 parent->color = RBTREE_BLACK;
                 rotateRight(t, grand);
+            // 부모가 left, 체크 노드가 right
             } else {
                 check->color = RBTREE_BLACK;
                 rotateLeft(t, parent);
                 rotateRight(t, grand);
             }
         } else {
+            // 부모가 right, 체크 노드가 right
             if (parent->right == check) {
                 parent->color = RBTREE_BLACK;
                 rotateLeft(t, grand);
+            // 부모가 right, 체크 노드가 left
             } else {
                 check->color = RBTREE_BLACK;
                 rotateRight(t, parent);
@@ -246,37 +250,24 @@ node_t *bst_delete(rbtree *t, node_t *delete_node, color_t *delete_color) {
     // case3 : 자식 2 (successor의 color가 삭제됨)
     } else {
         node_t *successor = right;
-        while (successor->left != t->nil) {         // 삭제한 노드와 바꿀 노드 찾기
+        while (successor->left != t->nil) {         
             successor = successor->left;
         }
+
+        // 삭제되는 노드는 successor
         *delete_color = successor->color;
         replace_node = successor->right;
+        delete_node->key = successor->key;
         
-        node_t *s_parent = successor->parent;
-        if (successor != right) {                   // successor가 delete_node의 오른쪽 자식이 아닌 경우 추가로 처리
+        if (successor == right) {
+            delete_node->right = replace_node;
+            replace_node->parent = delete_node;
+        } else {
+            successor->parent->left = replace_node;
             replace_node->parent = successor->parent;
-            s_parent->left = replace_node;
-            if (successor->right != t->nil) {
-                successor->right->parent = s_parent;
-            }
-            successor->right = right;
-            right->parent = successor;
-        } else {
-            replace_node->parent = successor;
         }
-
-        if (delete_node == t->root) {               // successor의 부모 재정의
-            t->root = successor;
-        } else if (parent->left == delete_node) {
-            parent->left = successor;
-        } else {
-            parent->right = successor;
-        }
-
-        successor->parent = parent;
-        successor->left = left;
-        left->parent = successor;
-        successor->color = delete_node->color;
+        
+        delete_node = successor;
     }
 
     free(delete_node);
