@@ -17,8 +17,14 @@ void rotateRight(rbtree *t, node_t *z);
 void rotateLeft(rbtree *t, node_t *z);
 // inorder 형태로 배열에 저장
 void inorder_arr(node_t *nil, node_t *node, int* arr, int* idx, const size_t n);
-// postorder 형태로 트리의 모든 노드 메모리 해제
+// 후위순회 하면서 트리의 모든 노드 메모리 해제
 void postorder_free(rbtree *t, node_t *node);
+// preorder 출력
+void preorder_print(rbtree *t, node_t *node);
+// inorder 출력
+void inorder_print(rbtree *t, node_t *node);
+// postorder 출력
+void postorder_print(rbtree *t, node_t *node);
 
 
 rbtree *new_rbtree(void)
@@ -174,22 +180,22 @@ void rbtree_insert_check(rbtree *t, node_t *check) {
     } else {
         grand->color = RBTREE_RED;
         if (grand->left == parent) {
-            // 부모가 left, 체크 노드가 left
+            // grand-parent-check : 일직선 모양
             if (parent->left == check) {
                 parent->color = RBTREE_BLACK;
                 rotateRight(t, grand);
-            // 부모가 left, 체크 노드가 right
+            // grand-parent-check : 꺾인 모양
             } else {
                 check->color = RBTREE_BLACK;
                 rotateLeft(t, parent);
                 rotateRight(t, grand);
             }
         } else {
-            // 부모가 right, 체크 노드가 right
+            // grand-parent-check : 일직선 모양
             if (parent->right == check) {
                 parent->color = RBTREE_BLACK;
                 rotateLeft(t, grand);
-            // 부모가 right, 체크 노드가 left
+            // grand-parent-check : 꺾인 모양
             } else {
                 check->color = RBTREE_BLACK;
                 rotateRight(t, parent);
@@ -255,10 +261,7 @@ node_t *bst_delete(rbtree *t, node_t *delete_node, color_t *delete_color) {
         }
 
         // 삭제되는 노드는 successor
-        *delete_color = successor->color;
         replace_node = successor->right;
-        delete_node->key = successor->key;
-        
         if (successor == right) {
             delete_node->right = replace_node;
             replace_node->parent = delete_node;
@@ -266,7 +269,8 @@ node_t *bst_delete(rbtree *t, node_t *delete_node, color_t *delete_color) {
             successor->parent->left = replace_node;
             replace_node->parent = successor->parent;
         }
-        
+        *delete_color = successor->color;
+        delete_node->key = successor->key;
         delete_node = successor;
     }
 
@@ -380,6 +384,22 @@ void rotateLeft(rbtree *t, node_t *z) {
     if (z == t->root) t->root = x;
 }
 
+void inorder_arr(node_t *nil, node_t *node, int *arr, int *idx, const size_t n) {
+    if (node == nil || *idx >= n)
+        return;
+    inorder_arr(nil, node->left, arr, idx, n);
+    arr[(*idx)++] = node->key;
+    inorder_arr(nil, node->right, arr, idx, n);
+}
+
+void postorder_free(rbtree *t, node_t *node) {
+    if (node == t->nil)
+        return;
+    postorder_free(t, node->left);
+    postorder_free(t, node->right);
+    free(node);
+}
+
 void preorder_print(rbtree *t, node_t *node) {
     if (node == t->nil)
         return;
@@ -402,20 +422,4 @@ void postorder_print(rbtree *t, node_t *node) {
     postorder_print(t, node->left);
     postorder_print(t, node->right);
     printf("%02d(%c) ", node->key, (node->color==RBTREE_BLACK)?'B':'R');
-}
-
-void inorder_arr(node_t *nil, node_t *node, int *arr, int *idx, const size_t n) {
-    if (node == nil || *idx >= n)
-        return;
-    inorder_arr(nil, node->left, arr, idx, n);
-    arr[(*idx)++] = node->key;
-    inorder_arr(nil, node->right, arr, idx, n);
-}
-
-void postorder_free(rbtree *t, node_t *node) {
-    if (node == t->nil)
-        return;
-    postorder_free(t, node->left);
-    postorder_free(t, node->right);
-    free(node);
 }
