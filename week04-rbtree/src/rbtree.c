@@ -37,9 +37,9 @@ node_t *rbtree_insert(rbtree *t, const key_t key)
     node_t *insert = bst_insert(t, key);
     rbtree_insert_check(t, insert);
 
-    // printf("insert %d\t: ", key);
-    // preorder_print(t, t->root);
-    // printf("\n");
+    printf("insert %d\t: ", key);
+    preorder_print(t, t->root);
+    printf("\n");
 
     return insert;
 }
@@ -105,9 +105,9 @@ int rbtree_erase(rbtree *t, node_t *p)
         rbtree_delete_check(t, replace_node);
     }
 
-    // printf("delete %d\t: ", key);
-    // preorder_print(t, t->root);
-    // printf("\n");
+    printf("delete %d\t: ", key);
+    preorder_print(t, t->root);
+    printf("\n");
     
     return 0;
 }
@@ -137,7 +137,7 @@ node_t *bst_insert(rbtree *t, const key_t key) {
         node_t *prev_node = t->nil;
         while (now_node != t->nil) {
             prev_node = now_node;
-            if (key < now_node->key){
+            if (key <= now_node->key){
                 now_node = now_node->left;
             } else{
                 now_node = now_node->right;

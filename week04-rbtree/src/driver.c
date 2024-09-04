@@ -5,35 +5,13 @@
 int main(int argc, char *argv[]) {
     rbtree *rb = new_rbtree();
 
-    rbtree_insert(rb, 45);
-    rbtree_insert(rb, 12);
-    rbtree_insert(rb, 89);
-    rbtree_insert(rb, 33);
-    rbtree_insert(rb, 76);
-    rbtree_insert(rb, 59);
-    rbtree_insert(rb, 8);
-    rbtree_insert(rb, 92);
-    rbtree_insert(rb, 23);
-    rbtree_insert(rb, 67);
-    rbtree_insert(rb, 18);
-    rbtree_insert(rb, 38);
-    rbtree_insert(rb, 54);
-    rbtree_insert(rb, 71);
-    rbtree_insert(rb, 29);
-    rbtree_insert(rb, 81);
-    rbtree_insert(rb, 5);
-    rbtree_insert(rb, 96);
-    rbtree_insert(rb, 50);
-    rbtree_insert(rb, 64);
+    key_t arr[] = {5, 17, 19, 7, 19, 19, 5, 11, 13, 7, 1, 5, 19};
+    int cnt = sizeof(arr) / sizeof(arr[0]);
 
-    rbtree_find(rb, 9);
-    rbtree_find(rb, 8);
-    rbtree_find(rb, 12);
-    rbtree_find(rb, 13);
-    rbtree_min(rb);
-    rbtree_max(rb);
+    for(int i=0; i<cnt; i++) {
+        rbtree_insert(rb, arr[i]);
+    }
 
-    
     printf("\n");
     printf("\n");
     printf("\n");
@@ -43,35 +21,11 @@ int main(int argc, char *argv[]) {
     printf("\n");
     printf("\n");
 
-    rbtree_erase(rb, rbtree_find(rb, 12));
-    rbtree_erase(rb, rbtree_find(rb, 92));
-    rbtree_erase(rb, rbtree_find(rb, 89));
-    rbtree_erase(rb, rbtree_find(rb, 18));
-    rbtree_erase(rb, rbtree_find(rb, 71));
-    rbtree_erase(rb, rbtree_find(rb, 45));
-    rbtree_erase(rb, rbtree_find(rb, 67));
-    rbtree_erase(rb, rbtree_find(rb, 8));
-    rbtree_erase(rb, rbtree_find(rb, 33));
-    rbtree_erase(rb, rbtree_find(rb, 76));
-    rbtree_erase(rb, rbtree_find(rb, 81));
-    rbtree_erase(rb, rbtree_find(rb, 50));
-    rbtree_erase(rb, rbtree_find(rb, 54));
-    rbtree_erase(rb, rbtree_find(rb, 38));
-    rbtree_erase(rb, rbtree_find(rb, 5));
-    rbtree_erase(rb, rbtree_find(rb, 23));
-    rbtree_erase(rb, rbtree_find(rb, 64));
-    rbtree_erase(rb, rbtree_find(rb, 96));
-    rbtree_erase(rb, rbtree_find(rb, 29));
-    rbtree_erase(rb, rbtree_find(rb, 59));
-
-    key_t *arr = calloc(20, sizeof(key_t));
-    rbtree_to_array(rb, arr, (size_t)15);
-    for (int i=0; i<20; i++) {
-        printf("%d ", arr[i]);
+    for(int i=0; i<cnt; i++) {
+        node_t* del = rbtree_find(rb, arr[i]);
+        rbtree_erase(rb, del);
     }
-    printf("\n");
 
     delete_rbtree(rb);
-    free(arr);
     return 0;
 }
