@@ -1,6 +1,5 @@
 #ifndef _RBTREE_H_
 #define _RBTREE_H_
-#define SENTINEL
 
 #include <stddef.h>
 
@@ -33,6 +32,9 @@ node_t *rbtree_find(const rbtree *, const key_t);
 node_t *rbtree_min(const rbtree *);
 node_t *rbtree_max(const rbtree *);
 int rbtree_erase(rbtree *, node_t *);
+void preorder_print(rbtree *t, node_t *node);       // preorder 형태로 트리 출력
+void inorder_print(rbtree *t, node_t *node);        // inorder 형태로 트리 출력
+void postorder_print(rbtree *t, node_t *node);      // postorder 형태로 트리 출력
 
 int rbtree_to_array(const rbtree *, key_t *, const size_t);
 

@@ -4,6 +4,7 @@
 
 int main(int argc, char *argv[]) {
     rbtree *rb = new_rbtree();
+
     rbtree_insert(rb, 45);
     rbtree_insert(rb, 12);
     rbtree_insert(rb, 89);
@@ -32,13 +33,23 @@ int main(int argc, char *argv[]) {
     rbtree_min(rb);
     rbtree_max(rb);
 
-    rbtree_erase(rb, rbtree_find(rb, 45));
+    
+    printf("\n");
+    printf("\n");
+    printf("\n");
+    preorder_print(rb, rb->root);
+    printf("\n");
+    printf("\n");
+    printf("\n");
+    printf("\n");
+
     rbtree_erase(rb, rbtree_find(rb, 12));
+    rbtree_erase(rb, rbtree_find(rb, 92));
     rbtree_erase(rb, rbtree_find(rb, 89));
     rbtree_erase(rb, rbtree_find(rb, 18));
     rbtree_erase(rb, rbtree_find(rb, 71));
+    rbtree_erase(rb, rbtree_find(rb, 45));
     rbtree_erase(rb, rbtree_find(rb, 67));
-    rbtree_erase(rb, rbtree_find(rb, 92));
     rbtree_erase(rb, rbtree_find(rb, 8));
     rbtree_erase(rb, rbtree_find(rb, 33));
     rbtree_erase(rb, rbtree_find(rb, 76));
@@ -61,5 +72,6 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     delete_rbtree(rb);
+    free(arr);
     return 0;
 }
