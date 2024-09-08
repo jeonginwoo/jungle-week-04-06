@@ -26,14 +26,14 @@ team_t team = {
     /* Team name */
     "jungle week05 team08",
     /* First member's full name */
-    "Harry Bovik",
+    "Jeong inwoo",
     /* First member's email address */
-    "bovik@cs.cmu.edu",
+    "jiw413@naver.com",
     /* Second member's full name (leave blank if none) */
     "",
     /* Second member's email address (leave blank if none) */
     ""
-};
+}; 
 
 
 #define WSIZE       4           // 워드 크기 (bytes)
@@ -74,7 +74,7 @@ int mm_init(void)
     // 메모리 시스템에서 4워드를 가져와서 빈 가용 리스트를 만들 수 있도록 초기화
     if ((heap_listp = mem_sbrk(4*WSIZE)) == (void *)-1) // heap_list는 메모리 할당 전 heap의 top 위치 저장
         return -1;
-    PUT(heap_listp, 0);         // 더블 워드 경계로 정렬된 미사용 패딩 워드 (경계는 bp 기준)
+    PUT(heap_listp + (0*WSIZE), PACK(0, 0));        // 더블 워드 경계로 정렬된 미사용 패딩 워드 (경계는 bp 기준)
     PUT(heap_listp + (1*WSIZE), PACK(DSIZE, 1));    // 프롤로그 헤더
     PUT(heap_listp + (2*WSIZE), PACK(DSIZE, 1));    // 프롤로그 풋터
     PUT(heap_listp + (3*WSIZE), PACK(0, 1));        // 에필로그 헤더
@@ -112,6 +112,35 @@ static void *extend_heap(size_t words)
     return coalesce(bp);
 }
 
+static void *coalesce(void *bp)
+{
+    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+    size_t size = GET_SIZE(HDRP(bp));
+
+    if (prev_alloc && next_alloc) {             // Case 1 : 이전 블록과 다음 블록 모두 할당됨 -> 병합 x
+        return bp;
+    }
+
+    else if (prev_alloc && !next_alloc) {       // Case 2 : 이전 블록은 할당되고, 다음 블록은 가용됨 -> 현재 블록과 다음 블록 병합
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+    }
+
+    else if (!prev_alloc && next_alloc) {       // Case 3 : 이전 블록은 가용되고, 다음 블록은 할당됨 -> 현재 블록과 이전 블록 병합
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        bp = PREV_BLKP(bp);
+    }
+
+    else {                                      // Case 4 : 이전 블록과 다음 블록 모두 가용됨 -> 세 블록 모두 병합
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
+        bp = PREV_BLKP(bp);
+    }
+    
+    PUT(HDRP(bp), PACK(size, 0));
+    PUT(FTRP(bp), PACK(size, 0));
+    return bp;
+}
+
 
 /* 
  * mm_malloc - Allocate a block by incrementing the brk pointer.
@@ -132,12 +161,6 @@ void *mm_malloc(size_t size)
         asize = 2 * DSIZE;
     else
         // 더 큰 크기의 블록을 요청할 경우 정렬을 고려한 크기 설정
-        /* 
-         * size + DSIZE : size에 헤더와 풋터의 크기인 DSIZE 추가 (헤더 + 풋터 크기 추가)
-         * DSIZE-1(==7) : 정렬을 위한 여유 공간 추가. size + DSIZE가 8바이트 경계에 맞지 않을 경우 8바이트 경계로 반올림 해주는 역할
-         * / DSIZE : 더블 워드 단위 정렬
-         * DSIZE * : 더블 워드 단위로 만들기
-         */
         asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);
 
     // 적절한 가용 블록을 찾은 경우 그 블록에 메모리를 할당
@@ -148,87 +171,11 @@ void *mm_malloc(size_t size)
 
     // 적절한 블록을 찾지 못한 경우 힙을 확장하여 메모리 할당
     extendsize = MAX(asize, CHUNKSIZE);
-    if ((bp = extend_heap(extendsize / WSIZE)) == NULL)
-        return NULL;
-    
-    place(bp, asize);
-    return bp;
-}
-
-
-/*
- * mm_free - Freeing a block does nothing.
- */
-void mm_free(void *bp)
-{
-    size_t size = GET_SIZE(HDRP(bp));   // 블록의 사이즈 가져오기
-
-    PUT(HDRP(bp), PACK(size, 0));   // 헤더 alloc bit 0으로 설정
-    PUT(FTRP(bp), PACK(size, 0));   // 풋터 alloc bit 0으로 설정
-    coalesce(bp);
-}
-
-static void *coalesce(void *bp)
-{
-    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
-    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
-    size_t size = GET_SIZE(HDRP(bp));
-
-    if (prev_alloc && next_alloc) {             // Case 1 : 이전 블록과 다음 블록 모두 할당됨 -> 병합 x
+    if ((bp = extend_heap(extendsize / WSIZE)) != NULL)
+        place(bp, asize);
         return bp;
-    }
-
-    else if (prev_alloc && !next_alloc) {       // Case 2 : 이전 블록은 할당되고, 다음 블록은 가용됨 -> 현재 블록과 다음 블록 병합
-        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
-        PUT(HDRP(bp), PACK(size, 0));
-        PUT(FTRP(bp), PACK(size, 0));
-    }
-
-    else if (!prev_alloc && next_alloc) {       // Case 3 : 이전 블록은 가용되고, 다음 블록은 할당됨 -> 현재 블록과 이전 블록 병합
-        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
-        PUT(FTRP(bp), PACK(size, 0));
-        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-        bp = PREV_BLKP(bp);
-    }
-
-    else {                                      // Case 4 : 이전 블록과 다음 블록 모두 가용됨 -> 세 블록 모두 병합
-        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
-        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
-        bp = PREV_BLKP(bp);
-    }
-    return bp;
-}
-
-/*
- * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
- */
-void *mm_realloc(void *ptr, size_t size)
-{
-    // 새로운 블록에 대한 포인터와 기존 블록에 대한 포인터
-    void *oldptr = ptr;
-    void *newptr;
-    size_t oldsize;
-
-    // 새로운 크기로 메모리 할당
-    newptr = mm_malloc(size);
-    if (newptr == NULL)
-        return NULL;
-
-    // 기존 블록의 크기를 헤더에서 가져옴
-    oldsize = GET_SIZE(HDRP(oldptr));
-
-    // 요청된 크기가 기존 블록 크기보다 작다면, 요청된 크기만큼만 복사
-    if (size < oldsize)
-        oldsize = size;
-
-    // 기존 데이터를 새 블록으로 복사
-    memcpy(newptr, oldptr, oldsize);
-
-    // 기존 블록 해제
-    mm_free(oldptr);
-
-    return newptr;
+    
+    return NULL;
 }
 
 // 가용 리스트에서 적절한 크기의 블록을 찾는 역할 (first-fit 방식)
@@ -262,11 +209,49 @@ static void place(void *bp, size_t asize)
     }
     // 블록을 분할하지 않는 경우
     else {
-        PUT(HDRP(bp), PACK(csize, 1));      // 전체 브록을 할달 상태로 설정
+        PUT(HDRP(bp), PACK(csize, 1));      // 전체 블록을 할당 상태로 설정
         PUT(FTRP(bp), PACK(csize, 1));      // 전체 블록을 할당 상태로 설정
     }
 }
 
+
+/*
+ * mm_free - Freeing a block does nothing.
+ */
+void mm_free(void *bp)
+{
+    size_t size = GET_SIZE(HDRP(bp));   // 블록의 사이즈 가져오기
+
+    PUT(HDRP(bp), PACK(size, 0));   // 헤더 alloc bit 0으로 설정
+    PUT(FTRP(bp), PACK(size, 0));   // 풋터 alloc bit 0으로 설정
+    coalesce(bp);
+}
+
+/*
+ * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
+ */
+void *mm_realloc(void *ptr, size_t size)
+{
+    // 새로운 블록에 대한 포인터와 기존 블록에 대한 포인터
+    void *oldptr = ptr;                         //
+    void *newptr = mm_malloc(size);             // 새로운 크기로 메모리 할당
+    size_t oldsize = GET_SIZE(HDRP(oldptr));    // 기존 블록의 크기를 헤더에서 가져옴
+
+    if (newptr == NULL)
+        return NULL;
+
+    // 요청된 크기가 기존 블록 크기보다 작다면, 요청된 크기만큼만 복사
+    if (size < oldsize)
+        oldsize = size;
+
+    // 기존 데이터를 새 블록으로 복사
+    memcpy(newptr, oldptr, oldsize);
+
+    // 기존 블록 해제
+    mm_free(oldptr);
+
+    return newptr;
+}
 
 
 
