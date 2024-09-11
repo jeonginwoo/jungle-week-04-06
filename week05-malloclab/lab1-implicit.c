@@ -26,14 +26,14 @@ team_t team = {
     /* Team name */
     "jungle week05 team08",
     /* First member's full name */
-    "Jeong inwoo",
+    "정인우",
     /* First member's email address */
     "jiw413@naver.com",
     /* Second member's full name (leave blank if none) */
     "",
     /* Second member's email address (leave blank if none) */
     ""
-}; 
+}
 
 
 #define WSIZE       4           // 워드 크기 (bytes)
@@ -66,7 +66,7 @@ void *heap_listp;  // 힙의 시작을 가리키는 포인터
 
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
-static void *find_fit(size_t asize);
+static void *first_fit(size_t asize);
 static void place(void *bp, size_t asize);
 
 int mm_init(void)
@@ -88,7 +88,7 @@ int mm_init(void)
 
 
 /* 
- * extend_heap 호출
+ * extend_heap 호
  * 1. 힙이 초기화될 때
  * 2. mm_malloc이 적당한 맞춤 fit을 찾지 못했을 때
  * 정렬을 유지하기 위해 요청한 크기를 인접 2워드 배수(8바이트)로 반올림하며, 그 후에 메모리 시스템으로부터 추가적인 힙 공간 요청
@@ -114,25 +114,46 @@ static void *extend_heap(size_t words)
 
 static void *coalesce(void *bp)
 {
-    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+    size_t prev_alloc = GET_ALLOC(HDRP(PREV_BLKP(bp)));
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
 
-    if (prev_alloc && next_alloc) {             // Case 1 : 이전 블록과 다음 블록 모두 할당됨 -> 병합 x
+    /* 
+     * Case 1 : 이전 블록과 다음 블록 모두 할당됨 -> 병합 x
+     * ┌ ─ ─ ─ ─ ─ ┐╔═══════════╗┌ ─ ─ ─ ─ ─ ┐
+     * └ ─ ─ ─ ─ ─ ┘╚═══════════╝└ ─ ─ ─ ─ ─ ┘
+     * 
+     */
+    if (prev_alloc && next_alloc) {
         return bp;
     }
 
-    else if (prev_alloc && !next_alloc) {       // Case 2 : 이전 블록은 할당되고, 다음 블록은 가용됨 -> 현재 블록과 다음 블록 병합
+    /* 
+     * Case 2 : 이전 블록은 할당되고, 다음 블록은 가용됨 -> 현재 블록과 다음 블록 병합
+     * ┌ ─ ─ ─ ─ ─ ┐╔═══════════╗┌───────────┐
+     * └ ─ ─ ─ ─ ─ ┘╚═══════════╝└───────────┘
+     */
+    else if (prev_alloc && !next_alloc) {
         size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
     }
 
-    else if (!prev_alloc && next_alloc) {       // Case 3 : 이전 블록은 가용되고, 다음 블록은 할당됨 -> 현재 블록과 이전 블록 병합
+    /* 
+     * Case 3 : 이전 블록은 가용되고, 다음 블록은 할당됨 -> 현재 블록과 이전 블록 병합
+     * ┌───────────┐╔═══════════╗┌ ─ ─ ─ ─ ─ ┐
+     * └───────────┘╚═══════════╝└ ─ ─ ─ ─ ─ ┘
+     */
+    else if (!prev_alloc && next_alloc) {
         size += GET_SIZE(HDRP(PREV_BLKP(bp)));
         bp = PREV_BLKP(bp);
     }
 
-    else {                                      // Case 4 : 이전 블록과 다음 블록 모두 가용됨 -> 세 블록 모두 병합
-        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
+    /* 
+     * Case 4 : 이전 블록과 다음 블록 모두 가용됨 -> 세 블록 모두 병합
+     * ┌───────────┐╔═══════════╗┌───────────┐
+     * └───────────┘╚═══════════╝└───────────┘
+     */
+    else {
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(HDRP(NEXT_BLKP(bp)));
         bp = PREV_BLKP(bp);
     }
     
@@ -164,22 +185,22 @@ void *mm_malloc(size_t size)
         asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);
 
     // 적절한 가용 블록을 찾은 경우 그 블록에 메모리를 할당
-    if ((bp = find_fit(asize)) != NULL) {
+    if ((bp = first_fit(asize)) != NULL) {
         place(bp, asize);
         return bp;
     }
 
     // 적절한 블록을 찾지 못한 경우 힙을 확장하여 메모리 할당
     extendsize = MAX(asize, CHUNKSIZE);
-    if ((bp = extend_heap(extendsize / WSIZE)) != NULL)
+    if ((bp = extend_heap(extendsize / WSIZE)) != NULL) {
         place(bp, asize);
         return bp;
+    }
     
     return NULL;
 }
 
-// 가용 리스트에서 적절한 크기의 블록을 찾는 역할 (first-fit 방식)
-static void *find_fit(size_t asize)
+static void *first_fit(size_t asize)
 {
     void *bp;
 
@@ -235,7 +256,7 @@ void *mm_realloc(void *ptr, size_t size)
     // 새로운 블록에 대한 포인터와 기존 블록에 대한 포인터
     void *oldptr = ptr;                         //
     void *newptr = mm_malloc(size);             // 새로운 크기로 메모리 할당
-    size_t oldsize = GET_SIZE(HDRP(oldptr));    // 기존 블록의 크기를 헤더에서 가져옴
+    size_t oldsize = GET_SIZE(HDRP(oldptr)) - DSIZE;    // 기존 블록의 크기를 헤더에서 가져옴
 
     if (newptr == NULL)
         return NULL;
