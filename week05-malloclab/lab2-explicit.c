@@ -64,7 +64,7 @@ static void *free_listp;
 
 static void *extend_heap(size_t words);
 static void *coalesce(char *bp);
-// static void *best_fit(size_t asize);
+static void *best_fit(size_t asize);
 static void *first_fit(size_t asize);
 static void place(char *bp, size_t asize);
 static void delete_block(char *bp);
@@ -174,7 +174,7 @@ static void *coalesce(char* bp)
     }
     
     /* 
-     * CASE 1 - 양쪽에 가용 블록이 없는 경우 (또는 위에서 병합된 블록)
+     * CASE 1 - 양쪽에 가용 블록이 없는 경우 (또는 CASE2, 3, 4에서 병합된 블록)
      * 1. 가용 블록 리스트의 맨 위로 올라감
      * 2. 기존의 맨 위 블록(free_listp)과 포인터 연결
      * 3. free_listp를 새로 top이 된 가용블록으로 변경
@@ -213,8 +213,8 @@ void *mm_malloc(size_t size)
     size_t extendsize = MAX(asize, CHUNKSIZE);
     char *bp;
 
-    // if ((bp = best_fit(asize)) != NULL) {
-    if ((bp = first_fit(asize)) != NULL) {
+    if ((bp = best_fit(asize)) != NULL) {
+    // if ((bp = first_fit(asize)) != NULL) {
         place(bp, asize);
         return bp;
     }
@@ -227,23 +227,23 @@ void *mm_malloc(size_t size)
     return NULL;
 }
 
-// static void *best_fit(size_t asize)
-// {
-//     char *min_bp = NULL;
-//     size_t min_size = ULONG_MAX;
-//     for (char *bp = free_listp; !GET_ALLOC(HDRP(bp)); bp = NEXT(bp)) {
-//         if (asize <= GET_SIZE(HDRP(bp)) && GET_SIZE(HDRP(bp)) < min_size) {
-//             min_size = GET_SIZE(HDRP(bp));
-//             min_bp = bp;
-//         }
-//     }
-//     return min_bp;
-// }
+static void *best_fit(size_t asize)     // 45 (util) + 24 (thru) = 69/100
+{
+    char *min_bp = NULL;
+    size_t min_size = ULONG_MAX;
+    for (char *bp = free_listp; !GET_ALLOC(HDRP(bp)); bp = NEXT(bp)) {
+        if (asize <= GET_SIZE(HDRP(bp)) && GET_SIZE(HDRP(bp)) < min_size) {
+            min_size = GET_SIZE(HDRP(bp));
+            min_bp = bp;
+        }
+    }
+    return min_bp;
+}
 
-static void *first_fit(size_t asize)
+static void *first_fit(size_t asize)    // 42 (util) + 40 (thru) = 82/100
 {
     for (char *bp = free_listp; !GET_ALLOC(HDRP(bp)); bp = NEXT(bp)) {
-        if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) {
+        if (asize <= GET_SIZE(HDRP(bp))) {
             return bp;
         }
     }
