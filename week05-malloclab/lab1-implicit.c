@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
+#include <limits.h>
 
 #include "mm.h"
 #include "memlib.h"
@@ -33,7 +34,7 @@ team_t team = {
     "",
     /* Second member's email address (leave blank if none) */
     ""
-}
+};
 
 
 #define WSIZE       4           // 워드 크기 (bytes)
@@ -61,13 +62,14 @@ team_t team = {
 #define NEXT_BLKP(bp)   ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))   // (다음 블록 포인터) = (현재 블록 포인터) + (현재 블록 사이즈)
 #define PREV_BLKP(bp)   ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))   // (이전 블록 포인터) = (현재 블록 포인터) - (이전 블록 사이즈)
 
-
-void *heap_listp;  // 힙의 시작을 가리키는 포인터
+static void *heap_listp;  // 힙의 시작을 가리키는 포인터
 
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
+static void *best_fit(size_t asize);
 static void *first_fit(size_t asize);
 static void place(void *bp, size_t asize);
+
 
 int mm_init(void)
 {
@@ -78,7 +80,7 @@ int mm_init(void)
     PUT(heap_listp + (1*WSIZE), PACK(DSIZE, 1));    // 프롤로그 헤더
     PUT(heap_listp + (2*WSIZE), PACK(DSIZE, 1));    // 프롤로그 풋터
     PUT(heap_listp + (3*WSIZE), PACK(0, 1));        // 에필로그 헤더
-    heap_listp += (2*WSIZE);
+    heap_listp += DSIZE;
 
     // 힙을 CHUNKSIZE 바이트로 확장하고 초기 가용 블록 생성
     if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
@@ -185,7 +187,8 @@ void *mm_malloc(size_t size)
         asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);
 
     // 적절한 가용 블록을 찾은 경우 그 블록에 메모리를 할당
-    if ((bp = first_fit(asize)) != NULL) {
+    if ((bp = best_fit(asize)) != NULL) {
+    // if ((bp = first_fit(asize)) != NULL) {
         place(bp, asize);
         return bp;
     }
@@ -200,12 +203,23 @@ void *mm_malloc(size_t size)
     return NULL;
 }
 
-static void *first_fit(size_t asize)
+static void *best_fit(size_t asize)     // 45 (util) + 8 (thru) = 53/100
 {
-    void *bp;
+    char *min_bp = NULL;
+    size_t min_size = ULONG_MAX;
+    for (char *bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)) {
+        if (!GET_ALLOC(HDRP(bp)) && asize <= GET_SIZE(HDRP(bp)) && GET_SIZE(HDRP(bp)) < min_size) {
+            min_size = GET_SIZE(HDRP(bp));
+            min_bp = bp;
+        }
+    }
+    return min_bp;
+}
 
+static void *first_fit(size_t asize)    // 44 (util) + 9 (thru) = 53/100
+{
     // 에필로그 블록이 아닐 때까지 반복
-    for (bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)) {
+    for (char *bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)) {
         // 할당 비트가 1이 아니고 찾는 사이즈 이상이면
         if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) {
             return bp;

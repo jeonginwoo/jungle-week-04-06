@@ -113,7 +113,7 @@ static int get_class_idx(size_t size)
 // 해당 클래스 인덱스에 맞는 클래스 찾기
 static char **get_class(int idx)
 {
-    return prologue_bp + idx*WSIZE;
+    return (char **)(prologue_bp + idx*WSIZE);
 }
 
 static void *extend_heap(size_t words)
