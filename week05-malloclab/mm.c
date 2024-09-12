@@ -100,7 +100,7 @@ static int get_class_idx(size_t size)
     if (size == 0) {
         return -1;
     }
-    size >>= 5;     // 32bit 위치부터 찾기 (블록의 최소 크기가 32bit)
+    size >>= 4;     // 사이즈 16부터 찾기 (블록의 최소 크기가 16byte)
     for (int i=0; i<CLASSSIZE; i++) {
         size >>= 1;
         if (size == 0) {
