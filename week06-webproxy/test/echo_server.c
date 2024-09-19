@@ -8,7 +8,7 @@
 #define BUFFER_SIZE 1024
 
 int main() {
-    int server_fd, new_socket;
+    int listenfd, connfd;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
@@ -17,16 +17,16 @@ int main() {
 
     // 소켓 생성
     printf("소켓 생성\n");
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
     // 소켓 옵션 설정
     printf("소켓 옵션 설정\n");
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
         perror("setsockopt");
-        close(server_fd);
+        close(listenfd);
         exit(EXIT_FAILURE);
     }
 
@@ -38,17 +38,17 @@ int main() {
 
     // 소켓에 주소 바인딩
     printf("소켓에 주소 바인딩\n");
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    if (bind(listenfd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("bind failed");
-        close(server_fd);
+        close(listenfd);
         exit(EXIT_FAILURE);
     }
 
     // 연결 요청 대기
     printf("연결 요청 대기\n");
-    if (listen(server_fd, 3) < 0) {
+    if (listen(listenfd, 3) < 0) {
         perror("listen");
-        close(server_fd);
+        close(listenfd);
         exit(EXIT_FAILURE);
     }
 
@@ -56,18 +56,18 @@ int main() {
 
     // 클라이언트 연결 수락
     printf("클라이언트 연결 수락\n");
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+    if ((connfd = accept(listenfd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
         perror("accept");
-        close(server_fd);
+        close(listenfd);
         exit(EXIT_FAILURE);
     }
 
     // 데이터 수신 및 송신
     printf("데이터 수신 및 송신\n");
     int valread;
-    while ((valread = recv(new_socket, buffer, BUFFER_SIZE, 0)) > 0) {
-        send(new_socket, response, strlen(response), 0);
-        send(new_socket, buffer, valread, 0);
+    while ((valread = recv(connfd, buffer, BUFFER_SIZE, 0)) > 0) {
+        send(connfd, response, strlen(response), 0);
+        send(connfd, buffer, valread, 0);
         memset(buffer, 0, BUFFER_SIZE);
     }
 
@@ -76,7 +76,7 @@ int main() {
     }
 
     printf("끝\n");
-    close(new_socket);
-    close(server_fd);
+    close(connfd);
+    close(listenfd);
     return 0;
 }

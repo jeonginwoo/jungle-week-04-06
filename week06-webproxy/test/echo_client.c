@@ -8,14 +8,14 @@
 #define BUFFER_SIZE 1024
 
 int main() {
-    int sock = 0;
+    int clientfd = 0;
     struct sockaddr_in serv_addr;
     char *message = "Hello, Server!";
     char buffer[BUFFER_SIZE] = {0};
 
     // 소켓 생성
     printf("소켓 생성\n");
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((clientfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
         return -1;
     }
@@ -32,19 +32,19 @@ int main() {
 
     // 서버에 연결
     printf("서버에 연결\n");
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    if (connect(clientfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         printf("\nConnection Failed \n");
         return -1;
     }
 
     // 데이터 송신
     printf("데이터 송신\n");
-    send(sock, message, strlen(message), 0);
+    send(clientfd, message, strlen(message), 0);
     printf("Message sent: %s\n", message);
 
     // 데이터 수신
     printf("데이터 수신\n");
-    int valread = recv(sock, buffer, BUFFER_SIZE, 0);
+    int valread = recv(clientfd, buffer, BUFFER_SIZE, 0);
     if (valread > 0) {
         buffer[valread] = '\0';
         printf("Message received: %s\n", buffer);
@@ -52,6 +52,6 @@ int main() {
         printf("No message received or error occurred.\n");
     }
 
-    close(sock);
+    close(clientfd);
     return 0;
 }
