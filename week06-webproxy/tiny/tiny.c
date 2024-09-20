@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen); // line:netp:tiny:accept
         Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
+        printf("\n\n\nAccepted connection from (%s, %s)\n", hostname, port);
         doit(connfd);  // line:netp:tiny:doit
         Close(connfd); // line:netp:tiny:close
     }
@@ -58,14 +58,14 @@ int main(int argc, char **argv)
  */
 void doit(int fd)
 {
-    printf("\n####### doit #######");
+    printf("\n####### doit #######\n");
     int is_static;
     struct stat sbuf;
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
     char filename[MAXLINE], cgiargs[MAXLINE];
     rio_t rio;
 
-    Rio_readinitb(&rio, fd);
+    Rio_readinitb(&rio, fd);    // 버퍼링된 읽기를 위한 Rio(Robust I/O) 패키지의 초기화 함수. rio_t 타입의 버퍼 구조체를 초기화.
     Rio_readlineb(&rio, buf, MAXLINE);
     printf("Request headers:\n");
     printf("%s", buf);
@@ -107,7 +107,7 @@ void doit(int fd)
  */
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg)
 {
-    printf("\n####### clienterror #######");
+    printf("\n####### clienterror #######\n");
     char buf[MAXLINE], body[MAXBUF];
 
     sprintf(body, "<html><title>Tiny Error</title>");
@@ -134,7 +134,7 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
  */
 void read_requesthdrs(rio_t *rp)
 {
-    printf("\n####### read_requesthdrs #######");
+    printf("\n####### read_requesthdrs #######\n");
     char buf[MAXLINE];
 
     Rio_readlineb(rp, buf, MAXLINE);
@@ -154,7 +154,7 @@ void read_requesthdrs(rio_t *rp)
  */
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
-    printf("\n####### parse_uri #######");
+    printf("\n####### parse_uri #######\n");
     char *ptr;
 
     if (!strstr(uri, "cgi-bin")) {
@@ -190,7 +190,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
  */
 void serve_static(int fd, char *filename, int filesize)
 {
-    printf("\n####### serve_static #######");
+    printf("\n####### serve_static #######\n");
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXBUF];
 
@@ -221,7 +221,7 @@ void serve_static(int fd, char *filename, int filesize)
  */
 void get_filetype(char *filename, char *filetype)
 {
-    printf("\n####### get_filetype #######");
+    printf("\n####### get_filetype #######\n");
     if (strstr(filename, ".html"))
         strcpy(filetype, "text/html");
     else if (strstr(filename, ".gif"))
@@ -246,7 +246,7 @@ void get_filetype(char *filename, char *filetype)
  */
 void serve_dynamic(int fd, char *filename, char *cgiargs)
 {
-    printf("\n####### serve_dynamic #######");
+    printf("\n####### serve_dynamic #######\n");
     char buf[MAXLINE], *emptylist[] = { NULL };
 
     sprintf(buf, "HTTP/1.0 200 OK\r\n");
