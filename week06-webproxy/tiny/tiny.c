@@ -58,6 +58,7 @@ int main(int argc, char **argv)
  */
 void doit(int fd)
 {
+    printf("\n####### doit #######");
     int is_static;
     struct stat sbuf;
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
@@ -95,6 +96,7 @@ void doit(int fd)
         }
         serve_dynamic(fd, filename, cgiargs);
     }
+    printf("####### doit #######\n");
 }
 
 /**
@@ -105,6 +107,7 @@ void doit(int fd)
  */
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg)
 {
+    printf("\n####### clienterror #######");
     char buf[MAXLINE], body[MAXBUF];
 
     sprintf(body, "<html><title>Tiny Error</title>");
@@ -120,6 +123,7 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
     sprintf(buf, "Content-length: %d\r\n\r\n", (int)strlen(body));
     Rio_writen(fd, buf, strlen(buf));
     Rio_writen(fd, body, strlen(body));
+    printf("####### clienterror #######\n");
 }
 
 /**
@@ -130,6 +134,7 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
  */
 void read_requesthdrs(rio_t *rp)
 {
+    printf("\n####### read_requesthdrs #######");
     char buf[MAXLINE];
 
     Rio_readlineb(rp, buf, MAXLINE);
@@ -138,6 +143,7 @@ void read_requesthdrs(rio_t *rp)
         printf("%s", buf);
         // Rio_writen(rp->rio_fd, buf, strlen(buf)); // 클라이언트에 헤더를 돌려줌 (echo)
     }
+    printf("####### read_requesthdrs #######\n");
 }
 
 /**
@@ -148,6 +154,7 @@ void read_requesthdrs(rio_t *rp)
  */
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
+    printf("\n####### parse_uri #######");
     char *ptr;
 
     if (!strstr(uri, "cgi-bin")) {
@@ -156,6 +163,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
         strcat(filename, uri);
         if (uri[strlen(uri)-1] == '/')
             strcat(filename, "home.html");
+        printf("####### parse_uri static #######\n");
         return 1;
     }
     else {
@@ -168,6 +176,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
             strcpy(cgiargs, "");
         strcpy(filename, ".");
         strcat(filename, uri);
+        printf("####### parse_uri dynamic #######\n");
         return 0;
     }
 }
@@ -181,6 +190,7 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
  */
 void serve_static(int fd, char *filename, int filesize)
 {
+    printf("\n####### serve_static #######");
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXBUF];
 
@@ -201,6 +211,7 @@ void serve_static(int fd, char *filename, int filesize)
     Close(srcfd);
     Rio_writen(fd, srcp, filesize);
     free(srcp);
+    printf("####### serve_static #######\n");
 }
 
 /**
@@ -210,6 +221,7 @@ void serve_static(int fd, char *filename, int filesize)
  */
 void get_filetype(char *filename, char *filetype)
 {
+    printf("\n####### get_filetype #######");
     if (strstr(filename, ".html"))
         strcpy(filetype, "text/html");
     else if (strstr(filename, ".gif"))
@@ -218,12 +230,11 @@ void get_filetype(char *filename, char *filetype)
         strcpy(filetype, "image/png");
     else if (strstr(filename, ".jpg"))
         strcpy(filetype, "image/jpeg");
-    else if (strstr(filename, ".mpg") || strstr(filename, ".mpeg"))
-        strcpy(filetype, "video/mpeg");     // MPG 파일
     else if (strstr(filename, ".mp4"))
         strcpy(filetype, "video/mp4");      // MP4 파일
     else
         strcpy(filetype, "text/plain");
+    printf("####### get_filetype #######\n");
 }
 
 /**
@@ -235,6 +246,7 @@ void get_filetype(char *filename, char *filetype)
  */
 void serve_dynamic(int fd, char *filename, char *cgiargs)
 {
+    printf("\n####### serve_dynamic #######");
     char buf[MAXLINE], *emptylist[] = { NULL };
 
     sprintf(buf, "HTTP/1.0 200 OK\r\n");
@@ -248,4 +260,5 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
         Execve(filename, emptylist, environ);
     }
     Wait(NULL);
+    printf("####### serve_dynamic #######\n");
 }
