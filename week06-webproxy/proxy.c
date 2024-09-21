@@ -4,6 +4,7 @@
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
 
+void *thread(void *vargp);
 void trans(int client_proxy_fd);
 void parse_uri(char *uri, char *path, char *hostname, char *port);
 
@@ -19,20 +20,39 @@ int main(int argc, char* argv[])
         exit(1);
     }
     
-    int listenfd, connfd;
+    int listenfd, *connfdp;
     struct sockaddr_storage clientaddr;     // 클라이언트의 주소 정보 저장 (ip주소, port번호)
     socklen_t clientlen;
+    pthread_t tid;
 
     listenfd = Open_listenfd(argv[1]);
     while(1) {
-        connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
         printf("========================\n");
-        trans(connfd);
+        clientlen = sizeof(struct sockaddr_storage);
+        connfdp = Malloc(sizeof(int));
+        *connfdp = Accept(listenfd, (SA *) &clientaddr, &clientlen);
+        Pthread_create(&tid, NULL, thread, connfdp);
         printf("========================\n\n");
-        Close(connfd);
     }
+    // while(1) {
+    //     connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
+    //     printf("========================\n");
+    //     trans(connfd);
+    //     printf("========================\n\n");
+    //     Close(connfd);
+    // }
 
     return 0;
+}
+
+void *thread(void *vargp)
+{
+    int connfd = *((int *)vargp);
+    Pthread_detach(pthread_self());
+    Free(vargp);
+    trans(connfd);
+    Close(connfd);
+    return NULL;
 }
 
 void trans(int client_proxy_fd)
