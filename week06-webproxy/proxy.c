@@ -73,7 +73,6 @@ void trans(int client_proxy_fd)
         }
         printf("%s", buf);
     }
-    Rio_writen(proxyfd, "\r\n", 2);     // 헤더 끝났음 알림용
     printf("------- client header end -------\n\n");
 
     // Proxy <- Server 응답 읽고 Client <- Proxy 응답
