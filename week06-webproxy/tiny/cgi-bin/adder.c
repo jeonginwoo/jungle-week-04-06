@@ -14,10 +14,8 @@ int main(void) {
         *p = '\0';
         strcpy(arg1, buf);
         strcpy(arg2, p+1);
-        sscanf(arg1, "%*[^=]=%d", arg1);
-        sscanf(arg2, "%*[^=]=%d", arg2);
-        n1 = atoi(arg1);
-        n2 = atoi(arg2);
+        sscanf(arg1, "%*[^=]=%d", &n1);
+        sscanf(arg2, "%*[^=]=%d", &n2);
         sprintf(content, "%sThe answer is: %d + %d = %d\r\n<p>", content, n1, n2, n1 + n2);
     }
 

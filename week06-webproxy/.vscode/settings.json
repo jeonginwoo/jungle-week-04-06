@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "*html": "html",
-        "csapp.h": "c"
+        "csapp.h": "c",
+        "cache.h": "c",
+        "stdlib.h": "c"
     }
 }

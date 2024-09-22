@@ -1,8 +1,5 @@
 #include "csapp.h"
-
-/* Recommended max cache and object sizes */
-#define MAX_CACHE_SIZE 1049000
-#define MAX_OBJECT_SIZE 102400
+#include "cache.h"
 
 void *thread(void *vargp);
 void trans(int client_proxy_fd);
@@ -12,6 +9,8 @@ void parse_uri(char *uri, char *path, char *hostname, char *port);
 static const char *user_agent_hdr =
     "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 "
     "Firefox/10.0.3\r\n";
+
+Dll *dll;
 
 int main(int argc, char* argv[])
 {
@@ -24,6 +23,7 @@ int main(int argc, char* argv[])
     struct sockaddr_storage clientaddr;     // 클라이언트의 주소 정보 저장 (ip주소, port번호)
     socklen_t clientlen;
     pthread_t tid;
+    dll = newDll();
 
     listenfd = Open_listenfd(argv[1]);
     while(1) {
@@ -63,6 +63,8 @@ void trans(int client_proxy_fd)
     char first_line[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
     char path[MAXLINE], hostname[100], port[10];
     rio_t rio_client, rio_server;
+    node *dll_node;
+    cacheKey cache_key;
 
     // Client -> Proxy 헤더 첫번째 요청 라인                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        정보 받기
     Rio_readinitb(&rio_client, client_proxy_fd);
@@ -78,6 +80,24 @@ void trans(int client_proxy_fd)
 
     // Proxy 소켓 생성
     parse_uri(uri, path, hostname, port);
+    strcpy(cache_key.method, method);
+    cache_key.path = path;
+
+    char proxy_to_client_header[MAXLINE];
+    if ((dll_node = search(dll, cache_key)) != NULL) {
+        sprintf(proxy_to_client_header, "HTTP/1.0 200 OK\r\n");
+        sprintf(proxy_to_client_header, "%sServer: Tiny Web Server\r\n", proxy_to_client_header);
+        sprintf(proxy_to_client_header, "%sConnection: close\r\n", proxy_to_client_header);
+        sprintf(proxy_to_client_header, "%sContent-length: %d\r\n", strlen(dll_node->data));
+        // sprintf(proxy_to_client_header, "%sContent-type: %s\r\n\r\n", proxy_to_client_header, );
+
+        moveFront(dll, dll_node);
+        strcpy(buf, dll_node->data);
+        Rio_writen(client_proxy_fd, proxy_to_client_header, strlen(proxy_to_client_header));
+        Rio_writen(client_proxy_fd, buf, strlen(dll_node->data));
+        return;
+    }
+
     proxyfd = Open_clientfd(hostname, port);
 
     // Proxy -> Server 요청 라인 전송
@@ -98,10 +118,56 @@ void trans(int client_proxy_fd)
     // Proxy <- Server 응답 읽고 Client <- Proxy 응답
     Rio_readinitb(&rio_server, proxyfd);
     printf("-------   server response   -------\n");
+    char res_header[MAXLINE];
+    char *data;
+    char *file_size_str;
+    int file_size;
+
+    // read header
+    printf("=== read header ===\n");
     while((read_len = Rio_readlineb(&rio_server, buf, MAXBUF)) > 0) {
-        Rio_writen(client_proxy_fd, buf, read_len);
+        sprintf(res_header, "%s%s", res_header, buf);
+        if (strstr(buf, "Content-length")) {
+            sscanf(buf, "Content-length: %d", &file_size);
+        }
+        if (strcmp(buf, "\r\n") == 0) {
+            break;
+        }
         printf("%s", buf);
     }
+    printf("\n=== read header ===\n\n");
+
+    // read body
+    data = (char *)malloc(file_size);
+    strcpy(data, "");
+    printf("=== read body ===\n");
+    while(Rio_readlineb(&rio_server, buf, MAXBUF) > 0) {
+        // ERROR -> Rio_readn으로 저장하기
+        sprintf(data, "%s%s", data, buf);
+        printf("%s", buf);
+    }
+    printf("\n=== read body ===\n\n");
+    printf("=== data ===\n");
+    printf("%s", data);
+    printf("\n=== data ===\n\n");
+    
+
+
+    dll_node = (node *)malloc(sizeof(node));
+    if (file_size <= MAX_OBJECT_SIZE){
+        // 캐시에 넣기
+        printf("\n=== cash data ===\n");
+        printf("data: %s", data);
+        dll_node->data = data;
+        strcpy(dll_node->cache_key.method, method);
+        dll_node->cache_key.path = path;
+        pushFront(dll, dll_node);
+    } else {
+        // 캐시 패스
+        free(data);
+    }
+    Rio_writen(client_proxy_fd, res_header, strlen(res_header));
+    Rio_writen(client_proxy_fd, data, file_size);
     printf("\n------- server response end -------\n\n");
 }
 
