@@ -12,25 +12,27 @@ static const char *user_agent_hdr =
 
 Dll *dll;
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    if (argc != 2) {
+    if (argc != 2)
+    {
         fprintf(stderr, "usage: %s <port>\n", argv[0]);
         exit(1);
     }
-    
+
     int listenfd, *connfdp;
-    struct sockaddr_storage clientaddr;     // 클라이언트의 주소 정보 저장 (ip주소, port번호)
+    struct sockaddr_storage clientaddr; // 클라이언트의 주소 정보 저장 (ip주소, port번호)
     socklen_t clientlen;
     pthread_t tid;
     dll = newDll();
 
     listenfd = Open_listenfd(argv[1]);
-    while(1) {
+    while (1)
+    {
         printf("\n========================\n");
         clientlen = sizeof(struct sockaddr_storage);
         connfdp = Malloc(sizeof(int));
-        *connfdp = Accept(listenfd, (SA *) &clientaddr, &clientlen);
+        *connfdp = Accept(listenfd, (SA *)&clientaddr, &clientlen);
         Pthread_create(&tid, NULL, thread, connfdp);
         printf("========================\n\n");
     }
@@ -100,19 +102,25 @@ void trans(int client_proxy_fd)
     printf("=== dll ===\n\n");
     strcpy(cache_key.method, method);
     cache_key.path = path;
-    
+
     printf("\n=== key compare ===\n");
     printf("method: %s\n", cache_key.method);
     printf("path: %s\n", cache_key.path);
     printf("=== key compare ===\n\n");
 
     char proxy_to_client_header[MAXLINE];
-    if ((dll_node = search(dll, cache_key)) != NULL) {
-        sprintf(proxy_to_client_header, "HTTP/1.0 200 OK\r\n");
-        sprintf(proxy_to_client_header, "%sServer: Proxy Server\r\n", proxy_to_client_header);
-        sprintf(proxy_to_client_header, "%sConnection: close\r\n", proxy_to_client_header);
-        snprintf(proxy_to_client_header + strlen(proxy_to_client_header), sizeof(proxy_to_client_header) - strlen(proxy_to_client_header),
-         "Content-length: %d\r\n\r\n", (int)strlen(dll_node->data));
+    if ((dll_node = search(dll, cache_key)) != NULL)
+    {
+        snprintf(proxy_to_client_header, sizeof(proxy_to_client_header), "HTTP/1.0 200 OK\r\n");
+        snprintf(proxy_to_client_header + strlen(proxy_to_client_header),
+                 sizeof(proxy_to_client_header) - strlen(proxy_to_client_header),
+                 "Server: Proxy Server\r\n");
+        snprintf(proxy_to_client_header + strlen(proxy_to_client_header),
+                 sizeof(proxy_to_client_header) - strlen(proxy_to_client_header),
+                 "Connection: close\r\n");
+        snprintf(proxy_to_client_header + strlen(proxy_to_client_header),
+                 sizeof(proxy_to_client_header) - strlen(proxy_to_client_header),
+                 "Content-length: %d\r\n\r\n", (int)strlen(dll_node->data));
         // sprintf(proxy_to_client_header, "%sContent-type: %s\r\n\r\n", proxy_to_client_header, );
 
         moveFront(dll, dll_node);
@@ -130,9 +138,11 @@ void trans(int client_proxy_fd)
 
     // Client -> Proxy 나머지 헤더 요청 라인 읽고 Proxy -> Server 요청 라인 전송
     printf("\n-------   client header   -------\n");
-    while((read_len = Rio_readlineb(&rio_client, buf, MAXBUF)) > 0) {
+    while ((read_len = Rio_readlineb(&rio_client, buf, MAXBUF)) > 0)
+    {
         Rio_writen(proxyfd, buf, read_len);
-        if (strcmp(buf, "\r\n") == 0) {
+        if (strcmp(buf, "\r\n") == 0)
+        {
             break;
         }
         printf("%s", buf);
@@ -149,12 +159,15 @@ void trans(int client_proxy_fd)
 
     // read header
     printf("\n=== read header ===\n");
-    while((read_len = Rio_readlineb(&rio_server, buf, MAXBUF)) > 0) {
+    while ((read_len = Rio_readlineb(&rio_server, buf, MAXBUF)) > 0)
+    {
         sprintf(res_header, "%s%s", res_header, buf);
-        if (strstr(buf, "Content-length")) {
+        if (strstr(buf, "Content-length"))
+        {
             sscanf(buf, "Content-length: %ld", &file_size);
         }
-        if (strcmp(buf, "\r\n") == 0) {
+        if (strcmp(buf, "\r\n") == 0)
+        {
             break;
         }
         printf("%s", buf);
@@ -165,27 +178,25 @@ void trans(int client_proxy_fd)
     data = (char *)malloc(file_size);
     strcpy(data, "");
     printf("\n=== read body ===\n");
-    while((read_len = Rio_readnb(&rio_server, buf, file_size)) > 0) {
-        strncat(data, buf, read_len);
-        printf("%s", buf);
-    }
-    printf("\n=== read body ===\n\n");
-    printf("=== data ===\n");
+    Rio_readnb(&rio_server, data, file_size);
     printf("%s", data);
-    printf("\n=== data ===\n\n");
-    
-    if (file_size <= MAX_OBJECT_SIZE){
+    printf("\n=== read body ===\n\n");
+
+    if (file_size <= MAX_OBJECT_SIZE)
+    {
         // 캐시에 넣기
         dll_node = (node *)malloc(sizeof(node));
         dll_node->data = data;
         dll_node->data_len = strlen(data);
         strcpy(dll_node->cache_key.method, cache_key.method);
 
-        dll_node->cache_key.path = (char *)malloc(sizeof(path));
-        strcpy(dll_node->cache_key.path, path);
-        
+        dll_node->cache_key.path = (char *)malloc(strlen(path) + 1);
+        strcpy(dll_node->cache_key.path, cache_key.path);
+
         pushFront(dll, dll_node);
-    } else {
+    }
+    else
+    {
         // 캐시 패스
         free(data);
     }
@@ -194,11 +205,15 @@ void trans(int client_proxy_fd)
     printf("\n------- server response end -------\n\n");
 }
 
-void parse_uri(char *uri, char *path, char *hostname, char *port) {
+void parse_uri(char *uri, char *path, char *hostname, char *port)
+{
     // 포트가 있을 경우만 포트 추출
-    if (strstr(uri, ":")) {
+    if (strstr(uri, ":"))
+    {
         sscanf(uri, "http://%99[^:]:%9[^/]/", hostname, port);
-    } else {
+    }
+    else
+    {
         sscanf(uri, "http://%99[^/]/", hostname);
     }
     sscanf(uri, "http://%*[^/]%s", path);
