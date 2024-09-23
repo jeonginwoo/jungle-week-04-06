@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen); // line:netp:tiny:accept
         Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-        printf("========================\n");
+        printf("\n========================\n");
         printf("Accepted connection from (%s, %s)\n", hostname, port);
         doit(connfd);  // line:netp:tiny:doit
         printf("========================\n\n");
@@ -138,7 +138,7 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
  * - 개행(\r\n)이 나올 때까지 계속 읽어들이고, 출력해줍니다.
  */
 void read_requesthdrs(rio_t* rp) {
-    printf("-------   header   -------\n");
+    printf("\n-------   header   -------\n");
     char buf[MAXLINE];
     while(Rio_readlineb(rp, buf, MAXLINE) > 0) {
         if (strcmp(buf, "\r\n") == 0) {

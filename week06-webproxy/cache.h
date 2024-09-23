@@ -12,6 +12,7 @@ typedef struct Node
 {
     cacheKey cache_key;
     char *data;
+    int data_len;
     struct Node *prev;
     struct Node *next;
 } node;

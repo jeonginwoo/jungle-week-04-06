@@ -39,6 +39,8 @@ cacheKey popBack(Dll *dll)
 
     dll->head->prev = pop_node->prev;
     pop_node->prev->next = dll->head;
+    
+    free(pop_node->cache_key.path);
     free(pop_node->data);
     free(pop_node);
 
@@ -52,13 +54,22 @@ cacheKey popBack(Dll *dll)
 node *search(Dll *dll, cacheKey cache_key)
 {
     node *find_node = dll->head->next;
+    printf("\n=== search ===\n");
+    printDll(dll);
+    printf("cache_key.method: %s\n", cache_key.method);
+    printf("cache_key.path: %s\n", cache_key.path);
+    printf("=== search ===\n\n");
+    printf("\n=== find_node ===\n");
     while (find_node != dll->head) {
+        printf("find_node.method: %s\n", find_node->cache_key.method);
+        printf("find_node.path: %s\n", find_node->cache_key.path);
         if (!strcmp(find_node->cache_key.method, cache_key.method) && !strcmp(find_node->cache_key.path, cache_key.path)) {
             printf("search (%s | %s) : find!\n", cache_key.method, cache_key.path);
             return find_node;
         }
         find_node = find_node->next;
     }
+    printf("=== find_node ===\n\n");
     printf("search (%s | %s) : not exist\n", cache_key.method, cache_key.path);
     return NULL;
 }
@@ -116,17 +127,9 @@ void deleteList(Dll *dll)
 //     pushFront(dll, (cacheKey){"GET", "/3333.html"});
 //     pushFront(dll, (cacheKey){"GET", "/4444.html"});
 //     pushFront(dll, (cacheKey){"GET", "/5555.html"});
-//     pushBack(dll, (cacheKey){"GET", "/6666.html"});
-//     pushBack(dll, (cacheKey){"GET", "/7777.html"});
-//     pushBack(dll, (cacheKey){"GET", "/8888.html"});
-//     pushBack(dll, (cacheKey){"GET", "/9999.html"});
-//     pushBack(dll, (cacheKey){"GET", "/0000.html"});
 //     popFront(dll);
 //     popFront(dll);
 //     popFront(dll);
-//     popBack(dll);
-//     popBack(dll);
-//     popBack(dll);
 //     search(dll, (cacheKey){"GET", "/6666.html"});
 //     search(dll, (cacheKey){"GET", "/aaaa.html"});
 //     // moveFront(dll, (cacheKey){"GET", "/1111.html"});
